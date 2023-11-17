@@ -1,127 +1,317 @@
-#include <stdlib.h>
+/*
+Jogo da cobrinha em c
+desenvolvido por: Isabela Spinelli, Maria Julia Pessoa e Maria Luisa Arruda
+disciplina de programacao imperativa e funcional
+*/
+
 #include <stdio.h>
-#include <unistd.h>
+#include <locale.h>
+#include <windows.h>
+#include <process.h>
+#include <string.h>
+#include <conio.h>
 
+//a biblioteca conio.h foi utilizada para controlar as entradas e saidas do terminal e personalizar a interface do jogo
 
+//a biblioteca windows.h foi utilizada para criar a janela do jogo em si
 
-//definindo constantes fixas no periodo de compilacao
-#define COLS 68
-#define LINHAS 38
+//criando struct para atribuir cordenadas a um item que vamos gerar na tela
 
-int main() {
- 
-  //Removendo o cursor do terminal:
-  //Para isso, usamos uma sequencia de escape, composta do caracter de escape da tabela ASCII (e)
-  //e o codigo [?25l que sinaliza que o cursor deve ser removido do terminal.
- 
-  printf("\e[?25l");
- 
-  int X[1000], Y[1000];
- 
-  int quit = 0;
- 
-  while (quit == 0){
- 
-    //este while esta gerando a tela do jogo sempre que quit estiver false (=0) ou seja
-    //quando o jogo estiver rodando!
+typedef struct item{
+
+int X;
+int Y;
+} TipoitemGerado;
+
+// criando um tipo de dado que armazena tudo que compoe uma celula da tela vista pelo jogador
+//e especifica o item que devera ser gerado naquela coordenada da tela
+typedef struct celula{
+//duvida aqui
+struct celula *next;
+struct celula *prev;
+TipoItemGerado item;
+
+} Celula;
+
+// criando um novo tipo de dado que armazena tudo que corresponde ao highscore
+
+typedef struct highscore{
+
+char *nomeJogador;
+float pontuacao;
+int nivel;
+
+} Highscore;
+
+//percursoCobra :: criando uma struct para depois criar uma lista para que possamos acompanhar o deslocamento da cobra ao longo
+//da tela para isso, vamos analizar em quais celulas estava a cabeca e o rabo da cobra,
+//identificando o percurso total naquele momento
+
+typedef struct percursoCobra{
+
+Celula *cabeca;
+Celula *rabo;
+
+} percursoCobra;
+
+//definindo uma struct com todos os dados importantes para o inicio da partida
+typedef struct jogo{
+
+char **mat;
+percursoCobra posicoes;
+int flag;
+int XAlvo;
+int YAlvo;
+int pontos;
+int ultimove;
+float speed;
+char nomeJogador[50];
+int ultimo_x;
+int ultimo_y;
+int corBG;
+int corSnake;
+int corMaca;
+int corParede;
+int corLetraPlacar;
+int corFundoPlacar;
+int nivelJogo;
+int macasJogo;
+Highscore highscore;
+int nivelDificuldade;
+percursoCobra blocos;
+
+} Jogo;
+
+//criando uma lista oara acompanhar o percurso da cobrinha
+void percursoVazio (percursoCobra *percurso){
+
+percurso -> cabeca = (Celula*) malloc (sizeof(Celula));
+percurso -> rabo = percurso -> cabeca;
+percurso -> rabo -> next = NULL;
+percurso -> cabeca -> prev = NULL;
+}
+
+int Vazia (percursoCobra percurso){
+
+return(percurso.cabeca == percurso.rabo);
+
+}
+
+// funcao para inserir novos espacos de memoria na lista do percurso da cobra
+
+void inserir(percursoCobra *percurso, TipoItemGerado x){
+
+percurso -> rabo -> next = (Celula*) malloc (sizeof(Celula));
+percurso -> rabo -> next -> prev = percurso -> rabo;
+percurso -> rabo = percurso -> rabo -> next;
+percurso -> rabo -> next =  NULL;
+percurso -> rabo = item = x;
+}
+
+void LimparMatriz (Jogo *jogo){
+
+int i, j;
+for(i=0; i < 20; i++){
+for(j=0; j<50; j++){
+jogo->mat(i)(j) = ' ';
+}
+}
+}
+
+//alocando espaco de memoria para a matriz que vamos usar para mostrar o jogo na tela
+char** AlocarMatriz(int Linhas, int Colunas){
+
+int i, j;
+char **m = (char**) malloc (Linhas * sizeof(char*));
+
+for (i = 0; i < Linhas; i++){
+        m[i] = (char*) malloc (Colunas *sizeof(char*));
+        for(j = 0; j < Colunas; j++){
+        m[i][j] = ' ';
+        }
+        }
+        return m;
+}
+
+// VER SE ELE EXPLICA ESSA FUNCAO marcar jogo e baixo
+void MarcarJogo(JOgo *jogo){
+
+int x, y, cont = 0;
+
+Celula *aux = jogo -> posicoes.cabeca;
+while(aux != NULL){
+
+x = aux -> item.x;
+y = aux -> item.y;
+if(count == 0){
+jogo -> mat[x][y] = 178;
+count++;
+} else {
    
-    printf("┌");
-    for(int i = 0; i < COLS; i++){
-       printf("─");
-       printf("┐\n");
-     
+   jogo -> mat[x][y] = 177;
+}
+aux= aux -> next;
+}
 
-    for(int j = 0; j < LINHAS; j++) {
-         printf("|");
-         
-      for(int i = 0; i < COLS; i++){
-         printf("·");
-         printf("|\n");
-       
-    }
-     
-      printf("└");
-     
-      for(int i = 0; i < COLS; i++){
-       printf("─");
-       printf("┘\n");
-       
-       // movendo o cursor de volta ao topo da tela
-       printf("\e[%iA",LINHAS + 2);
-       
-       
-       int cabeca = 0, rabo = 0;
-       
-       X[cabeca] = COLS / 2;
-       Y[rabo] = LINHAS / 2;
-       int gameOver = 0;
-       int dirX = 1, dirY = 0;
-       int macaX = -1, macaY;
-       
-       
-       //while esta estabelecendo a logica de jogo q vai ficar ativa enquando o jogador nao perder
-       while(quit == 0 && gameOver == 0) {
-         
-          //gerando as macas
-          if(macaX < 0) {
-           //criando uma nova maca de forma aleatoria caso nao haja nenhuma na dimensao x
-           
-           macaX = rand() % COLS;
-           macaY = rand() % LINHAS;
-           
-           for (int i = rabo; i != cabeca; i = (i + 1) % 1000){
-             if (X[i] == macaX && Y[i] == macaY){
-              macaX = -1;
-             }
-           
-           if (macaX >= 0){
-              // desenhando maca
-              printf("\e[%iB\e[%iC❤", macaY + 1, macaX + 1);
-              printf("\e[%iF", macaY + 1);
-           }
-         
-          }
-       }
-       
-          // limpar rabo da cobra usando uma sequencia de escape
-          //para que de a impressao de movimentacao da cobra
-          printf("\e[%iB\e[%iC·", Y[rabo] + 1, X[rabo] + 1);
-          printf("\e[%iF", Y[rabo] + 1);
-     
-     
-          // caso a cobra colida com a maca:
-          if (X[cabeca] == macaX && Y[cabeca] == macaY){
-              //apaga a maca
-              macaX = -1;
-              printf("\a"); //soa um alerta! sem mudar a posicao da cobra
-         
-          }else { rabo = (rabo + 1) % 1000;}
+jogo -> mat [jogo -> XAlvo] [jogo -> YAlvo] = '*';
 
+aux = jogo -> blocos.cabeca -> next;
 
-          int novaCabeca = (cabeca + 1) % 1000;
-          X[novaCabeca] = (X[cabeca] + dirX + COLS) % COLS;
-          Y[novaCabeca] = (Y[cabeca] + dirY + LINHAS) % LINHAS;
-          cabeca = novaCabeca;
-         
-       //desenhando a cabeca da cobrinha
-       printf("\e[%iB\e[%iC▓", Y[cabeca] + 1, X[cabeca] + 1);
-       printf("\e[%iF", Y[cabeca] + 1);
-       
-       //usando a funcao da biblioteca <unistd.h> de c em unix: usleep() para     implementar um atraso de  
-       //microsegundos no jogo
-       
-       usleep(5 * 1000000 / 60);
-       
-       }
-       
-       // lendo as entradas do usuario da linha de comando, utilizando a cli-lib de thiaguinho
-       // (command line interface library)
+while(aux != NULL){
+
+jogo -> mat [aux -> item.x] [aux -> item.y] = 'p';
+aux = aux -> next;
+}
   }
- 
-   //ao sair do jogo, cursor pode aparecer novamente
-   printf("\e[?25h");
-   return 0;
-       }
-     }
-   }
+
+
+void dirBaixo(Jogo *jogo){
+
+if((jogo -> posicoes.cabeca -> item.x + 1) < 20 && jogo -> nivelDificuldade > 3){
+
+Celula *aux = jogo -> posicoes.rabo;
+
+while(aux -> prev != NULL){
+
+aux -> item.x = aux -> prev -> item.x;
+aux -> item.y = aux -> prev -> item.y;
+aux = aux -> ant;
+}
+
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+jogo -> posicoes.cabeca -> item.x++;
+jogo -> ultimaJogada = 80;
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+jogo -> posicoes.cabeca -> item.x++;
+jogo -> ultimaJogada = 80;
+
+} else { jogo -> flag = -1; }
+
+void dirCima(Jogo *jogo){
+
+if((jogo -> posicoes.cabeca -> item.x -1) >= 0 && jogo -> dificuldade > 3){
+
+Celula *aux = jogo -> posicoes.rabo;
+
+while(aux -> prev != NULL)
+{
+aux -> item.x = aux -> prev -> item.x;
+aux -> item.y = aux -> prev -> item.y;
+aux = aux -> prev;
+}
+
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+jogo ->  posicoes.cabeca -> item.x--;
+
+} else if(jogo -> nivelDificuldade <=3){
+Celula *aux = jogo -> posicoes.rabo;
+while(aux -> prev != NULL){
+aux -> item.x = aux -> prev -> item.x;
+aux -> item.y = aux -> prev -> item.y;
+aux = aux -> prev;
+}
+
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+
+if((jogo -> posicoes.cabeca  -> item.x -1) >= 0){
+
+jogo -> posicoes.cabeca -> item.x--;
+}else {
+  jogo -> posicoes.cabeca -> item.x = 19;
+  jogo -> ultimaJogada == 72;
+
+}
+else jogo -> flag = -1;
+}
+
+void Esquerda(Jogo *jogo){
+
+if((jogo -> posicoes.cabeca  -> item.y -1) >= 0 && jogo -> nivelDificuldade > 3){
+
+Celula *aux = jogo -> posicoes.rabo;
+
+while(aux -> prev != NULL)
+{
+aux -> item.x = aux -> prev -> item.x;
+aux -> item.y = aux -> prev -> item.y;
+aux = aux -> prev;
+}
+
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+jogo ->  posicoes.cabeca -> item.y--;
+jogo -> ultimaJogada = 75;
+} else if(jogo -> nivelDificuldade <=3 ) {
+
+Celula *aux = jogo -> posicoes.rabo;
+
+while(aux -> prev != NULL){
+
+aux -> item.x = aux -> prev -> item.x;
+aux -> item.y = aux -> prev -> item.y;
+aux = aux -> ant;
+}
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+
+if((jogo -> posicoes.cabeca  -> item.y -1) >= 0){
+
+jogo -> posicoes.cabeca -> item.y--;
+}else {
+  jogo -> posicoes.cabeca -> item.y = 49;
+  jogo -> ultimaJogada == 75;
+}
+else jogo -> flag = -1;
+
+  }
+}
+
+void Direita(Jogo *jogo){
+
+if((jogo -> posicoes.cabeca  -> item.y -1) <= 50 && jogo -> nivelDificuldade > 3){
+
+Celula *aux = jogo -> posicoes.rabo;
+
+while(aux -> prev != NULL)
+{
+aux -> item.x = aux -> prev -> item.x;
+aux -> item.y = aux -> prev -> item.y;
+aux = aux -> prev;
+}
+
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+jogo ->  posicoes.cabeca -> item.y++;
+jogo -> ultimaJogada = 77;
+
+} else if(jogo -> nivelDificuldade <=3 ) {
+
+Celula *aux = jogo -> posicoes.rabo;
+
+while(aux -> prev != NULL){
+
+aux -> item.x = aux -> prev -> item.x;
+aux -> item.y = aux -> prev -> item.y;
+aux = aux -> ant;
+}
+jogo -> mat [jogo -> posicoes.cabeca -> item.x] [jogo -> posicoes.cabeca -> item.y] = ' ';
+
+if((jogo -> posicoes.cabeca  -> item.y) <= 48){
+
+jogo -> posicoes.cabeca -> item.y++;
+}else {
+  jogo -> posicoes.cabeca -> item.y = 0;
+  jogo -> ultimaJogada == 77;
+}
+else jogo -> flag = -1;
+
+  }
+}
+
+// criando uma fun;'ao para gerar de forma aleatoria, alvos
+void GerarAlvo(Jogo *jogo){
+
+
+}
+
+}
+
+}
 }
