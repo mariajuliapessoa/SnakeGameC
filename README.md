@@ -15,6 +15,7 @@ Maria Luisa Arruda (maluArr on github)
 # External libraries used
 ## CLI-LIB
 cli-lib : https://github.com/tgfb/cli-lib/blob/main/README.md
+
 A Cli-lib é uma biblioteca criada para desenvolver aplicações e jogo C e com ela nós iremos administrar as telas e os inputs do jogador via o  periférico teclado.
 
 Para utilizá-la, é necessário somente pegar os source e o header file desse repositório e juntar ao nosso programa, trocando a main desse repositório pela nossa main.
