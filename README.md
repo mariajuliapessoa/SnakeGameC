@@ -16,9 +16,9 @@ Maria Luisa Arruda (maluArr on github)
 ## CLI-LIB
 cli-lib : https://github.com/tgfb/cli-lib/blob/main/README.md
 
-A Cli-lib é uma biblioteca criada para desenvolver aplicações e jogo C e com ela nós iremos administrar as telas e os inputs do jogador via o  periférico teclado.
+Cli-lib is a library created for developing C applications and games and with it we will manage the player's screens and inputs via the keyboard peripheral.
 
-Para utilizá-la, é necessário somente pegar os source e o header file desse repositório e juntar ao nosso programa, trocando a main desse repositório pela nossa main.
+To use it, we just need to take the source and header files from this repository and add them to our program, replacing the main in this repository with our main.
 
 ------------------------------------------------------------------------------------------
 # Requirements
